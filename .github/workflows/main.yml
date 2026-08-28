@@ -1,0 +1,64 @@
+name: NanUI CI/CD Pipeline
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  ci:
+    runs-on: windows-latest
+    steps:
+      # Install the .NET Core workload
+      - name: Install .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Get .NET information
+        run: dotnet --info
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+        with:
+          vs-version: "[17.0,18.0)"
+          vs-prerelease: true
+
+      - name: Checkout repository
+        id: checkout_repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Clean .NET cache
+        id: clean_dotnet_cache
+        shell: pwsh
+        run: |
+          dotnet clean .\"NanUI.sln"
+          dotnet nuget locals all --clear
+
+      - name: Install NuGet packages
+        id: install_nuget_packages
+        shell: pwsh
+        run: |
+          nuget restore .\"NanUI.sln"
+
+      - name: Build solution
+        id: build_solution
+        shell: pwsh
+        run: |
+          msbuild .\"NanUI.sln" -property:Configuration=Release
+
+      - name: Install Nuget
+        run: |
+          $sourceNugetExe = "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
+          $targetNugetExe = "nuget.exe"
+          Invoke-WebRequest $sourceNugetExe -OutFile $targetNugetExe
+
+      - name: Push Nuget package
+        run: |
+          .\nuget.exe push .\bin\NetDimension.NanUI.*.nupkg -Source https://api.nuget.org/v3/index.json -ApiKey ${{ secrets.NUGET_KEY }} -NoSymbols -SkipDuplicate
+          .\nuget.exe push .\bin\NetDimension.NanUI.*.snupkg -Source https://api.nuget.org/v3/index.json -ApiKey ${{ secrets.NUGET_KEY }} -SkipDuplicate
+
+# Built with ❤ by [Pipeline Foundation](https://pipeline.foundation)
