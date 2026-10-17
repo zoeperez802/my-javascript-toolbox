@@ -90,3 +90,5 @@ public enum WindowStyle : uint
     /// <summary>The window has a vertical scroll bar.</summary>
     WS_VSCROLL = 0x200000
 }
+
+// b62569

@@ -36,3 +36,5 @@ public sealed unsafe partial class CefMediaSource
     /// </summary>
     public bool IsDialSource => cef_media_source_t.is_dial_source(_self) != 0;
 }
+
+// 2ebe23
